@@ -13,10 +13,13 @@
   <url type="bugtracker">https://github.com/bravo1003/outlook-for-linux/issues</url>
   <launchable type="desktop-id">outlook-for-linux.desktop</launchable>
   <releases>
-    <release version="2.22.0" date="2026-09-21">
+    <release version="1.0.0" date="2026-09-21">
       <description>
         <ul>
-          <li>Initial Outlook build, derived from teams-for-linux 2.22.0</li>
+          <li>First release of this fork, derived from teams-for-linux 2.22.0 and re-pointed at Outlook on the web</li>
+          <li>Desktop integration carried over from upstream: system notifications, tray icon with unread badge, multiple account profiles, download manager with KDE JobView and Unity LauncherEntry progress, spell checking, client certificates and WebAuthn/FIDO2 sign-in</li>
+          <li>Teams-only subsystems are disabled rather than deleted: presence and MQTT/Home Assistant, calls and meetings, screen sharing, custom backgrounds and stickers, Teams theme sync, and the msteams: deep-link handler</li>
+          <li>Linux x64 packages: deb, rpm, tar.gz and AppImage</li>
         </ul>
       </description>
     </release>
