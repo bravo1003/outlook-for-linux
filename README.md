@@ -55,10 +55,18 @@ npm start          # or: npm run start:dev  (adds --no-sandbox)
 ## Build packages
 
 ```bash
-npm run dist:linux            # deb, rpm, tar.gz, AppImage
+npm run dist:linux:x64        # deb, rpm, tar.gz, AppImage
 npm run dist:linux:deb
 npm run dist:linux:appimage
 ```
+
+## Releases
+
+Releases are cut manually from the Actions tab: **Release** → *Run workflow*,
+entering the version. It lints, runs the unit tests, audits dependencies,
+builds all four x64 package formats and attaches them to a GitHub release
+(as a draft by default). See [PORTING.md](PORTING.md#cutting-a-release) for
+the full procedure.
 
 ## Configuration
 

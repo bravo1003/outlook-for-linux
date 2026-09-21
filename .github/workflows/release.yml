@@ -1,0 +1,154 @@
+name: Release
+
+# Manual only, on purpose. This is a personal fork that tracks upstream
+# releases, so cutting a build is a deliberate act rather than something that
+# should happen on every push. Run it from the Actions tab.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the leading v (e.g. 2.22.0). Must match package.json."
+        required: true
+        type: string
+      draft:
+        description: "Create the release as a draft so you can review it before it goes live"
+        required: false
+        type: boolean
+        default: true
+      prerelease:
+        description: "Mark the release as a pre-release (ignored when draft is checked)"
+        required: false
+        type: boolean
+        default: false
+
+# Restrict default permissions — the job below declares what it needs
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # electron-builder derives the release tag from the version; a full
+          # history lets the tag-collision check below see existing tags.
+          fetch-depth: 0
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Check the version input against package.json
+        # Catching the mismatch here is much cheaper than discovering it after
+        # a full build, and it stops a release being tagged v2.23.0 while the
+        # packages inside it report 2.22.0.
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          pkg_version="$(node -p "require('./package.json').version")"
+          if [[ "$INPUT_VERSION" != "$pkg_version" ]]; then
+            echo "::error::Version input '$INPUT_VERSION' does not match package.json ('$pkg_version'). Bump package.json first, or correct the input."
+            exit 1
+          fi
+          echo "Releasing v$pkg_version"
+
+      - name: Check the tag is not already taken
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/v${INPUT_VERSION}" >/dev/null; then
+            echo "::error::Tag v${INPUT_VERSION} already exists. Bump the version or delete the tag first."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        # --ignore-scripts blocks arbitrary dependency lifecycle scripts; the
+        # explicit postinstall keeps electron-builder install-app-deps (native
+        # dep rebuild) that packaging needs.
+        run: |
+          npm ci --ignore-scripts
+          npm run postinstall
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=critical
+
+      - name: Generate release info
+        # Fails when the AppStream file has no entry with release notes for
+        # this version, which is what keeps the changelog honest.
+        run: npm run generate-release-info
+
+      - name: Build the release notes body
+        # generate-release-info writes electron-builder's ReleaseInfo JSON.
+        # Pointing releaseNotesFile straight at it would put raw JSON in the
+        # release body, so extract just the notes into a markdown file and
+        # override the config to use that instead.
+        run: |
+          set -euo pipefail
+          node -e "
+            const fs = require('node:fs');
+            const info = JSON.parse(fs.readFileSync('release-info.json', 'utf8'));
+            fs.writeFileSync('release-notes.md', (info.releaseNotes ?? '').trim() + '\n');
+          "
+          echo "--- release notes ---"
+          cat release-notes.md
+
+      - name: Build and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # electron-builder release types: draft | prerelease | release.
+          # Draft wins when both boxes are ticked, since a draft is the
+          # reviewable state and a pre-release is already public.
+          RELEASE_TYPE: ${{ inputs.draft && 'draft' || (inputs.prerelease && 'prerelease' || 'release') }}
+        run: |
+          set -euo pipefail
+          echo "Publishing as: $RELEASE_TYPE"
+          npm run dist:linux:x64 -- \
+            --publish always \
+            -c.linux.publish.releaseType="$RELEASE_TYPE" \
+            -c.linux.releaseInfo.releaseNotesFile=release-notes.md
+
+      - name: Upload packages to the workflow run
+        # A second copy that survives independently of the GitHub release, so
+        # a botched draft can be deleted and recreated without rebuilding.
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: outlook-for-linux-linux-x64
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
+            dist/*.AppImage
+          retention-days: 30
+          compression-level: 6
+          if-no-files-found: warn
+
+      - name: Summary
+        if: success()
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          {
+            echo "### Released v${INPUT_VERSION}"
+            echo
+            echo "Packages built: deb, rpm, tar.gz, AppImage (x64)"
+            echo
+            echo "See the [releases page](${{ github.server_url }}/${{ github.repository }}/releases)."
+          } >> "$GITHUB_STEP_SUMMARY"

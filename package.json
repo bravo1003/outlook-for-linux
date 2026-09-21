@@ -98,6 +98,7 @@
       "category": "Office;Network;Email",
       "packageCategory": "net",
       "executableName": "outlook-for-linux",
+      "maintainer": "bravo1003 <bravo1003@users.noreply.github.com>",
       "synopsis": "Outlook for Linux",
       "description": "Unofficial Microsoft Outlook client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "executableArgs": [

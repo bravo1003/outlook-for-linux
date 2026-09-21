@@ -58,6 +58,12 @@ Conflicts to expect, and what to do with them:
   (`git rm`) and add the new version's entry to this fork's appdata file.
 - **`package.json`** — usually merges, but check `version`, and re-check the
   `build` block if upstream restructured packaging.
+- **`.github/workflows/`** — thirteen upstream workflows were deleted (see
+  below). Upstream changes to any of them come back as modify/delete
+  conflicts; keep them deleted with `git rm`.
+- **`.github/CODEOWNERS`, `.github/FUNDING.yml`**, `release-please-config.json`
+  and `.release-please-manifest.json` — deleted for the same reason, same
+  resolution.
 
 Then verify:
 
@@ -89,3 +95,50 @@ Set `app.url` back to `https://teams.cloud.microsoft` in
 `~/.config/outlook-for-linux/config.json`. Every Teams subsystem is still in
 the tree and comes back. The branding and the `msteams:` scheme registration
 do not — those are build-time, not runtime.
+
+## CI in this fork
+
+Upstream's CI assumes upstream's infrastructure: Snap Store and Flathub
+credentials, a Docusaurus site deployed to its own Pages, release-please
+version-bump PRs, and label bots driven by its issue workflow. None of that
+applies here, and on a fork those jobs fail loudly rather than quietly, so
+they were removed.
+
+What remains:
+
+| Workflow | Trigger | Why it stayed |
+| --- | --- | --- |
+| `release.yml` | Manual (`workflow_dispatch`) | This fork's release build |
+| `codeql-analysis.yml` | Push, PR, weekly | Self-contained, free on public repos |
+| `osv-scanner.yml` | PR, weekly | Self-contained dependency scanning |
+
+Removed: `build.yml`, `comment-artifacts.yml`, `cross-distro-smoke.yml`,
+`dependabot-auto-merge.yml`, `docs.yml`, `flathub-beta-bump.yml`,
+`flatpak-smoke.yml`, `release-please.yml`, `remove-awaiting-feedback.yml`,
+`review-reply-marker.yml`, `snap-release.yml`, `snap.yml`, `stale.yml`.
+
+`CODEOWNERS` and `FUNDING.yml` went too: the first would have requested
+review from the upstream maintainer on every pull request opened here, and
+the second would have put a Sponsor button on this fork that funds upstream.
+
+Note that deleting `build.yml` also removed the push/PR lint-and-test run.
+The release workflow gates on lint, unit tests and `npm audit` before it
+builds, so a release cannot ship red — but day-to-day pushes are not checked.
+Add a small `ci.yml` running `npm run lint && npm run test:unit` if you want
+that back.
+
+## Cutting a release
+
+1. Bump `version` in `package.json` (and `package-lock.json`).
+2. Add a matching `<release>` entry with notes to
+   `com.github.bravo1003.outlook_for_linux.appdata.xml`. The build fails
+   without one — that check is what keeps the changelog honest.
+3. Commit and push.
+4. Actions → **Release** → *Run workflow*, enter the version (no leading `v`),
+   and leave **draft** ticked to review before it goes live.
+
+The workflow refuses to run if the version input disagrees with
+`package.json`, or if the tag already exists. It builds deb, rpm, tar.gz and
+AppImage for x64, attaches them to the GitHub release, and also uploads them
+as a workflow artifact so a botched draft can be deleted and recreated
+without rebuilding.
