@@ -15,6 +15,11 @@ const { ipcRenderer } = require("electron");
 try {
   const { webUtils } = require("electron");
   const { isTeamsHost } = require("../helpers/teamsHosts");
+  const { isOutlookHost } = require("../helpers/outlookHosts");
+  // This fork loads Outlook, but the same path restore is what lets an
+  // attachment dragged from a file manager reach the compose window, so the
+  // gate accepts either app's hosts rather than only Teams'.
+  const isAppHost = (hostname) => isTeamsHost(hostname) || isOutlookHost(hostname);
   // Restore the non-standard `File.path` on every File in a FileList, in place.
   // No-op for blob-backed files (screenshots) since webUtils only resolves a
   // path for files that originated from the OS file list; those are left as-is.
@@ -44,7 +49,7 @@ try {
   globalThis.addEventListener(
     "drop",
     (event) => {
-      if (!isTeamsHost(globalThis.location.hostname)) {
+      if (!isAppHost(globalThis.location.hostname)) {
         return;
       }
       restoreFilePaths(event.dataTransfer?.files);
@@ -54,7 +59,7 @@ try {
   globalThis.addEventListener(
     "paste",
     (event) => {
-      if (!isTeamsHost(globalThis.location.hostname)) {
+      if (!isAppHost(globalThis.location.hostname)) {
         return;
       }
       restoreFilePaths(event.clipboardData?.files);
@@ -441,8 +446,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
     const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer"]);
 
+    // This fork targets Outlook on the web, which has none of the Teams React
+    // internals, presence service or calling stack. Those modules would load
+    // and then no-op (reactHandler fails its environment validation), so skip
+    // them outright: it keeps startup cheap and the console free of failures
+    // that are expected rather than interesting. Pointing `app.url` back at a
+    // Teams host restores the full upstream module set.
+    const { isBrowserModuleEnabled, isOutlookTarget } = require("../helpers/appTarget");
+    const enabledModules = modules.filter((module) =>
+      isBrowserModuleEnabled(module.name, config),
+    );
+    const skipped = modules.length - enabledModules.length;
+    if (skipped > 0) {
+      console.debug(`Preload: skipping ${skipped} Teams-only modules for the Outlook target`);
+    }
+
     let successCount = 0;
-    for (const module of modules) {
+    for (const module of enabledModules) {
       try {
         const moduleInstance = require(module.path);
         if (modulesRequiringIpc.has(module.name)) {
@@ -456,13 +476,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     
-    console.info(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
+    console.info(`Preload: ${successCount}/${enabledModules.length} browser modules initialized successfully`);
 
-    try {
-      const ActivityManager = require("./notifications/activityManager");
-      new ActivityManager(ipcRenderer, config).start();
-    } catch (err) {
-      console.error("Preload: ActivityManager failed to initialize:", err.message);
+    // ActivityManager drives Teams presence and the incoming-call toasts off
+    // activityHub, which reads Teams' own services. Outlook has no equivalent,
+    // and its idle polling would otherwise run forever for nothing.
+    if (isOutlookTarget(config)) {
+      console.debug("Preload: ActivityManager not started (Outlook target)");
+    } else {
+      try {
+        const ActivityManager = require("./notifications/activityManager");
+        new ActivityManager(ipcRenderer, config).start();
+      } catch (err) {
+        console.error("Preload: ActivityManager failed to initialize:", err.message);
+      }
     }
 
     // Listen for config changes from the main process (e.g., when menu toggles are clicked)

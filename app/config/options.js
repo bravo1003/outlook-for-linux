@@ -95,7 +95,7 @@ module.exports = {
         applyMode: "restart",
       },
       appTitle: {
-        default: "Microsoft Teams",
+        default: "Outlook",
         describe: "A text to be suffixed with page title",
         type: "string",
         applyMode: "restart",
@@ -595,7 +595,7 @@ module.exports = {
         deprecated: "use urlHandling.openMeetupJoinInApp instead",
       },
       partition: {
-        default: "persist:teams-4-linux",
+        default: "persist:outlook-4-linux",
         describe: "BrowserWindow webpreferences partition",
         type: "string",
         applyMode: "restart",
@@ -693,8 +693,8 @@ module.exports = {
         applyMode: "restart",
       },
       url: {
-        default: "https://teams.cloud.microsoft",
-        describe: "Microsoft Teams URL",
+        default: "https://outlook.office.com/mail/",
+        describe: "Outlook on the web URL",
         type: "string",
         applyMode: "restart",
         deprecated: "use app.url instead",
@@ -1290,12 +1290,12 @@ module.exports = {
       },
       app: {
         default: {
-          title: "Microsoft Teams",
-          url: "https://teams.cloud.microsoft",
-          partition: "persist:teams-4-linux",
+          title: "Outlook",
+          url: "https://outlook.office.com/mail/",
+          partition: "persist:outlook-4-linux",
         },
         describe:
-          "Core application identity and the Teams URL it loads. Replaces the deprecated appTitle, url and partition options.",
+          "Core application identity and the Outlook URL it loads. Replaces the deprecated appTitle, url and partition options.",
         type: "object",
         fields: {
           "title": {
@@ -1304,7 +1304,7 @@ module.exports = {
           },
           "url": {
             type: "string",
-            describe: "Microsoft Teams URL",
+            describe: "Outlook on the web URL",
           },
           "partition": {
             type: "string",

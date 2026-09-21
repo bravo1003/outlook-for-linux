@@ -21,6 +21,8 @@ const ConnectionManager = require("../connectionManager");
 const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
+const { isOutlookHost } = require("../helpers/outlookHosts");
+const { isOutlookTarget } = require("../helpers/appTarget");
 const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
@@ -250,6 +252,7 @@ const AUTH_DOMAINS = [
   'login.microsoft.com',
   'teams.microsoft.com',
   'teams.cloud.microsoft',
+  'outlook.office.com',
   'microsoft.com',
   'office.com',
   'office365.com',
@@ -407,7 +410,9 @@ const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'interaction_required'];
 // explicit user action (the banner click, or the mid-call prompt).
 const OPT_IN_AUTH_FAILURE_PATTERNS = ['Uncaught Error: UPR:'];
 // Only trust auth failure signals from Teams/Microsoft origins
-const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
+const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com',
+  // This fork loads Outlook on the web, so its origins raise the same signal.
+  'outlook.office.com', 'outlook.office365.com'];
 // Loop guard for the automatic clear-and-reload. A cooldown rather than a
 // single-shot flag: a long-running app can hit a second stale session hours
 // after the first recovery (observed in the field: recovery at 10:55, the
@@ -1247,12 +1252,17 @@ function onBeforeRequestHandler(details, callback) {
   }
 }
 
-// Teams domains whose enforcing CSP we never touch
+// App domains whose enforcing CSP we never touch. Outlook's origins and its
+// static CDN are listed alongside the Teams ones so the report-only strip
+// below stays limited to third-party SSO pages for either target.
 const TEAMS_DOMAINS = [
   'teams.cloud.microsoft',
   'teams.microsoft.com',
   'teams.live.com',
   'statics.teams.cdn.office.net',
+  'outlook.office.com',
+  'outlook.office365.com',
+  'res.cdn.office.net',
 ];
 
 /**
@@ -1384,9 +1394,45 @@ function onNewWindow(details) {
     // open-externally behaviour via secureOpenLink below.
     triggerPopupRecovery('Direct login popup intercepted');
     return { action: "deny" };
+  } else if (isOutlookSelfPopup(details.url)) {
+    return openOutlookPopupInApp();
   }
 
   return secureOpenLink(details);
+}
+
+// Outlook on the web opens several of its own surfaces as popups on its own
+// origin: "open in a separate window" for a message, the `/mail/deeplink/`
+// attachment and read-only message views, and the Calendar and People
+// modules. Those are the application, not an outbound link, so handing them
+// to the system browser would drop the user into a second, cookie-separate
+// session. Keep them inside Electron. Anything off the Outlook origins still
+// falls through to the normal external-link policy.
+function isOutlookSelfPopup(url) {
+  if (!isOutlookTarget(config)) {
+    return false;
+  }
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === "https:" && isOutlookHost(hostname);
+  } catch {
+    return false;
+  }
+}
+
+function openOutlookPopupInApp() {
+  console.debug("[LINK] Keeping Outlook popup in-app");
+  // Not modal: OWA popups are meant to sit alongside the main window (a user
+  // reads one message while triaging the list behind it), and a modal child
+  // would block the parent.
+  removePopupWindowMenu();
+  return {
+    action: "allow",
+    overrideBrowserWindowOptions: {
+      parent: window,
+      useContentSize: true,
+    },
+  };
 }
 
 function onPageTitleUpdated(_event, title) {

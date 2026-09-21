@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<component type="desktop-application">
+  <id>com.github.bravo1003.outlook_for_linux</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <name>Outlook for Linux</name>
+  <summary>Unofficial Microsoft Outlook client for Linux</summary>
+  <description>
+    <p>Experience seamless integration with Outlook on the web in a standalone Electron application.</p>
+    <p>This application is an unofficial client for Microsoft Outlook. It is derived from teams-for-linux by Ismael Martinez and remains licensed under the GPL-3.0.</p>
+  </description>
+  <url type="homepage">https://github.com/bravo1003/outlook-for-linux</url>
+  <url type="bugtracker">https://github.com/bravo1003/outlook-for-linux/issues</url>
+  <launchable type="desktop-id">outlook-for-linux.desktop</launchable>
+  <releases>
+    <release version="2.22.0" date="2026-09-21">
+      <description>
+        <ul>
+          <li>Initial Outlook build, derived from teams-for-linux 2.22.0</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

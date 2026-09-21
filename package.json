@@ -1,22 +1,28 @@
 {
-  "name": "teams-for-linux",
+  "name": "outlook-for-linux",
   "version": "2.22.0",
   "main": "app/index.js",
-  "description": "Unofficial client for Microsoft Teams for Linux",
-  "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
+  "description": "Unofficial client for Microsoft Outlook for Linux",
+  "homepage": "https://github.com/bravo1003/outlook-for-linux",
   "keywords": [
-    "Teams",
-    "Microsoft Teams"
+    "Outlook",
+    "Microsoft Outlook"
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://github.com/IsmaelMartinez/teams-for-linux"
+    "url": "git+ssh://github.com/bravo1003/outlook-for-linux"
   },
   "author": {
-    "name": "Ismael Martinez",
-    "email": "ismaelmartinez@gmail.com",
-    "url": "https://github.com/IsmaelMartinez/"
+    "name": "bravo1003",
+    "url": "https://github.com/bravo1003/"
   },
+  "contributors": [
+    {
+      "name": "Ismael Martinez",
+      "url": "https://github.com/IsmaelMartinez/",
+      "comment": "Author of teams-for-linux, the upstream this is derived from"
+    }
+  ],
   "license": "GPL-3.0-or-later",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
@@ -78,16 +84,10 @@
     "follow-redirects": "^1.16.0"
   },
   "build": {
-    "appId": "teams-for-linux",
+    "appId": "outlook-for-linux",
     "asarUnpack": [
       "node_modules/spellchecker/vendor/hunspell_dictionaries"
     ],
-    "protocols": {
-      "name": "msteams",
-      "schemes": [
-        "msteams"
-      ]
-    },
     "extraResources": [
       {
         "from": "app/assets/sounds",
@@ -95,18 +95,18 @@
       }
     ],
     "linux": {
-      "category": "Chat;Network;Office",
+      "category": "Office;Network;Email",
       "packageCategory": "net",
-      "executableName": "teams-for-linux",
-      "synopsis": "Teams for Linux",
-      "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
+      "executableName": "outlook-for-linux",
+      "synopsis": "Outlook for Linux",
+      "description": "Unofficial Microsoft Outlook client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "executableArgs": [
         "--ozone-platform=x11"
       ],
       "desktop": {
         "entry": {
-          "Name": "Teams for Linux",
-          "Comment": "Unofficial client for Microsoft Teams for Linux"
+          "Name": "Outlook for Linux",
+          "Comment": "Unofficial client for Microsoft Outlook for Linux"
         }
       },
       "target": [
@@ -147,7 +147,7 @@
       ]
     },
     "snap": {
-      "summary": "Teams for Linux",
+      "summary": "Outlook for Linux",
       "confinement": "strict",
       "grade": "stable",
       "base": "core22",

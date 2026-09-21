@@ -14,11 +14,11 @@ async function generateDebianChangelog(projectRoot = null) {
 
   const appdataPath = path.join(
     root,
-    "com.github.IsmaelMartinez.teams_for_linux.appdata.xml"
+    "com.github.bravo1003.outlook_for_linux.appdata.xml"
   );
   if (!fs.existsSync(appdataPath)) {
     throw new Error(
-      "com.github.IsmaelMartinez.teams_for_linux.appdata.xml not found."
+      "com.github.bravo1003.outlook_for_linux.appdata.xml not found."
     );
   }
 

@@ -35,7 +35,7 @@ const WebAuthn = require("./webauthn");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
-// Name notifications "Teams for Linux" instead of the raw app name.
+// Name notifications "Outlook for Linux" instead of the raw app name.
 // Desktop environments read two different fields for the header: KDE shows
 // the notification's app_name (which Electron takes from app.name), GNOME
 // resolves the desktop-entry hint and shows that entry's Name. Cover both.
@@ -43,7 +43,7 @@ const isMac = os.platform() === "darwin";
 // existing installs would silently switch config directory.
 if (process.platform === "linux") {
   const userDataPath = app.getPath("userData");
-  app.setName("Teams for Linux");
+  app.setName("Outlook for Linux");
   app.setPath("userData", userDataPath);
 
   // The desktop-entry hint must be set unconditionally: Electron pre-sets
@@ -53,9 +53,9 @@ if (process.platform === "linux") {
   if (process.env.FLATPAK_ID) {
     app.setDesktopName(`${process.env.FLATPAK_ID}.desktop`);
   } else if (process.env.SNAP_INSTANCE_NAME) {
-    app.setDesktopName(`${process.env.SNAP_INSTANCE_NAME}_teams-for-linux.desktop`);
+    app.setDesktopName(`${process.env.SNAP_INSTANCE_NAME}_outlook-for-linux.desktop`);
   } else {
-    app.setDesktopName("teams-for-linux.desktop");
+    app.setDesktopName("outlook-for-linux.desktop");
   }
 }
 
@@ -214,9 +214,16 @@ if (isMac) {
   requestMediaAccess();
 }
 
-const protocolClient = "msteams";
-if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
-  app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+// Only claim the `msteams:` scheme when this build actually targets Teams.
+// The deep-link handling downstream parses Teams route formats exclusively,
+// so an Outlook build registering the scheme would take `msteams:` links away
+// from a real Teams client and then fail to do anything useful with them.
+const { isOutlookTarget } = require("./helpers/appTarget");
+if (!isOutlookTarget(config)) {
+  const protocolClient = "msteams";
+  if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
+    app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+  }
 }
 
 if (gotTheLock) {
