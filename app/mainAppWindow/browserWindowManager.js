@@ -15,8 +15,13 @@ const {
   collectPartitionsToClear,
   clearStorageForPartitions,
 } = require("../utils/storagePartitions");
+const { isOutlookTarget } = require("../helpers/appTarget");
 
 class BrowserWindowManager {
+  #dark() {
+    return nativeTheme.shouldUseDarkColors;
+  }
+
   constructor(properties) {
     this.config = properties.config;
     this.iconChooser = properties.iconChooser;
@@ -84,13 +89,17 @@ class BrowserWindowManager {
 
   createNewBrowserWindow(windowState) {
     return new BrowserWindow({
-      title: "Teams for Linux",
+      title: isOutlookTarget(this.config) ? "Outlook for Linux" : "Teams for Linux",
       x: windowState.x,
       y: windowState.y,
 
       width: windowState.width,
       height: windowState.height,
-      backgroundColor: nativeTheme.shouldUseDarkColors ? "#302a75" : "#fff",
+      // Shown before the web app paints and behind it during resize, so it
+      // should match the app being loaded. #302a75 is the Teams brand purple
+      // and looked badly out of place framing Outlook; #1b1a19 is the Fluent
+      // dark neutral Outlook itself uses.
+      backgroundColor: this.#dark() ? (isOutlookTarget(this.config) ? "#1b1a19" : "#302a75") : "#fff",
 
       show: false,
       autoHideMenuBar: this.config.menubar == "auto",

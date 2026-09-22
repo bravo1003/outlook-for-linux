@@ -28,10 +28,19 @@ const TARGET_TEAMS = "teams";
  *  - Calls & meetings: meetingStartDetector, speakingIndicator, the mic and
  *                      camera overrides, preventDeviceSwitching
  *  - Teams chat UI:    customStickers
+ *  - Teams top bar:    navigationButtons
+ *
+ * navigationButtons is the subtle one. Its styling is neutral, but it injects
+ * a back/forward container as a sibling of the top-bar search region, falling
+ * back to the generic `[role="search"]` selector when the Teams-specific
+ * data-tid is absent. Outlook's own search box matches that fallback, so on
+ * Outlook the module mutated the live search region and a MutationObserver
+ * kept re-injecting it, which broke mail search outright.
  */
 const TEAMS_ONLY_BROWSER_MODULES = new Set([
   "settings",
   "theme",
+  "navigationButtons",
   "timestampCopyOverride",
   "mqttStatusMonitor",
   "meetingStartDetector",

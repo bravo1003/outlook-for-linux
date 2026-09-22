@@ -53,13 +53,22 @@ test("the Outlook target skips Teams-only preload modules and keeps the shared o
   for (const name of ["theme", "settings", "customStickers", "speakingIndicator", "mqttStatusMonitor"]) {
     assert.strictEqual(isBrowserModuleEnabled(name, OUTLOOK), false, name);
   }
-  for (const name of ["zoom", "shortcuts", "trayIconRenderer", "navigationButtons", "webauthnOverride"]) {
+  for (const name of ["zoom", "shortcuts", "trayIconRenderer", "webauthnOverride"]) {
     assert.strictEqual(isBrowserModuleEnabled(name, OUTLOOK), true, name);
   }
 });
 
+test("navigationButtons never loads against Outlook", () => {
+  // Regression: the module anchors on the top-bar search region and falls back
+  // to the generic `[role="search"]` selector, which Outlook's own search box
+  // matches. Injecting there, and re-injecting on every re-render, broke mail
+  // search entirely. It stays a Teams-only module.
+  assert.strictEqual(isBrowserModuleEnabled("navigationButtons", OUTLOOK), false);
+  assert.strictEqual(isBrowserModuleEnabled("navigationButtons", TEAMS), true);
+});
+
 test("a Teams-targeted config loads every module, exactly as upstream does", () => {
-  for (const name of ["theme", "settings", "customStickers", "zoom", "trayIconRenderer"]) {
+  for (const name of ["theme", "settings", "customStickers", "zoom", "trayIconRenderer", "navigationButtons"]) {
     assert.strictEqual(isBrowserModuleEnabled(name, TEAMS), true, name);
   }
 });
