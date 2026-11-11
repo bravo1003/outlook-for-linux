@@ -470,7 +470,8 @@ document.addEventListener('DOMContentLoaded', async (event) => {
       { name: "customStickers", path: "./tools/customStickers", ipc: true },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer", ipc: true },
       { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching", ipc: false },
-      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture", ipc: false }
+      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture", ipc: false },
+      { name: "outlookMailNotifier", path: "./tools/outlookMailNotifier", ipc: false } // [outlook]
     ];
 
     // An indexed loop over own properties, not for...of or Set.has: page script

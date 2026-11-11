@@ -1,9 +1,13 @@
 const test = require("node:test");
 const assert = require("node:assert");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
 
 const {
   TARGET_OUTLOOK,
   TARGET_TEAMS,
+  TEAMS_ONLY_BROWSER_MODULES,
+  OUTLOOK_ONLY_BROWSER_MODULES,
   resolveTarget,
   isOutlookTarget,
   isBrowserModuleEnabled,
@@ -70,5 +74,24 @@ test("navigationButtons never loads against Outlook", () => {
 test("a Teams-targeted config loads every module, exactly as upstream does", () => {
   for (const name of ["theme", "settings", "customStickers", "zoom", "trayIconRenderer", "navigationButtons"]) {
     assert.strictEqual(isBrowserModuleEnabled(name, TEAMS), true, name);
+  }
+});
+
+test("Outlook-only modules load on the Outlook target and never on Teams", () => {
+  for (const name of OUTLOOK_ONLY_BROWSER_MODULES) {
+    assert.strictEqual(isBrowserModuleEnabled(name, OUTLOOK), true, name);
+    assert.strictEqual(isBrowserModuleEnabled(name, TEAMS), false, name);
+  }
+});
+
+test("every gated module name exists in preload's module table", () => {
+  // The regression net for upstream renames: a module renamed upstream would
+  // silently drop out of TEAMS_ONLY_BROWSER_MODULES and start loading against
+  // Outlook again. Fails until the set is updated to the new name.
+  const source = readFileSync(join(__dirname, "../../app/browser/preload.js"), "utf8");
+  const names = new Set([...source.matchAll(/\{\s*name:\s*"([^"]+)",\s*path:/g)].map((m) => m[1]));
+  assert.ok(names.size > 10, "parsed preload's module table");
+  for (const name of [...TEAMS_ONLY_BROWSER_MODULES, ...OUTLOOK_ONLY_BROWSER_MODULES]) {
+    assert.ok(names.has(name), `${name} is not in app/browser/preload.js`);
   }
 });

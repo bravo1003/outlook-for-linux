@@ -58,6 +58,20 @@ const TEAMS_ONLY_BROWSER_MODULES = new Set([
 ]);
 
 /**
+ * Browser-side modules this fork adds for Outlook. They load only on the
+ * Outlook target, so a config pointed back at Teams runs exactly upstream's
+ * module set.
+ *
+ *  - outlookMailNotifier: Outlook on the web delivers desktop notifications
+ *    through Web Push, which Electron has no push service for, so it never
+ *    raises one. This module turns Outlook's own in-app new-mail toasts into
+ *    desktop notifications instead.
+ */
+const OUTLOOK_ONLY_BROWSER_MODULES = new Set([
+  "outlookMailNotifier",
+]);
+
+/**
  * The URL the app is configured to load, tolerating both the current nested
  * `app.url` and the deprecated flat `url`.
  *
@@ -108,7 +122,7 @@ function isOutlookTarget(config) {
  */
 function isBrowserModuleEnabled(moduleName, config) {
   if (!isOutlookTarget(config)) {
-    return true;
+    return !OUTLOOK_ONLY_BROWSER_MODULES.has(moduleName);
   }
   return !TEAMS_ONLY_BROWSER_MODULES.has(moduleName);
 }
@@ -117,6 +131,7 @@ module.exports = {
   TARGET_OUTLOOK,
   TARGET_TEAMS,
   TEAMS_ONLY_BROWSER_MODULES,
+  OUTLOOK_ONLY_BROWSER_MODULES,
   getConfiguredUrl,
   resolveTarget,
   isOutlookTarget,
