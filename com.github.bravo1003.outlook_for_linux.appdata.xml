@@ -13,6 +13,16 @@
   <url type="bugtracker">https://github.com/bravo1003/outlook-for-linux/issues</url>
   <launchable type="desktop-id">outlook-for-linux.desktop</launchable>
   <releases>
+    <release version="1.1.0" date="2026-11-11">
+      <description>
+        <ul>
+          <li>Rebase onto teams-for-linux 2.31.1 (Electron 44)</li>
+          <li>Desktop notifications for new mail, calendar reminders and mentions. Outlook on the web delivers its desktop notifications through Web Push, which Electron cannot receive, so none were ever shown; the app now forwards Outlook's own in-app notifications to the system instead</li>
+          <li>The Teams link schemes (msteams:, web+msteams:) are no longer claimed, so they keep opening a real Teams client</li>
+          <li>The theme restart dialog names Outlook for Linux</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.1" date="2026-09-22">
       <description>
         <ul>

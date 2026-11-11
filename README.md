@@ -2,7 +2,7 @@
 
 **Unofficial Microsoft Outlook client for Linux** — a desktop app that wraps Outlook on the web with Linux desktop integration.
 
-✅ **System notifications**
+✅ **Desktop notifications** for new mail, calendar reminders and mentions
 ✅ **System tray with unread badge** (badge support varies by desktop environment)
 ✅ **Multiple account profiles**
 ✅ **WebAuthn / FIDO2 security keys** for sign-in
@@ -43,7 +43,19 @@ depend on internals (`teams2CoreServices`) that Outlook has no equivalent of:
 | Screen sharing, mic and camera overrides, speaking indicator | Only used during Teams calls |
 | Custom backgrounds, custom stickers | Teams meeting and chat features |
 | Teams theme sync and the in-app settings bridge | Reads Teams' React client preferences |
-| `msteams:` deep links | This build does not claim the scheme; a real Teams client keeps it |
+| Integrated title bar, frameless top-bar tweaks | Styled against the Teams top bar |
+| Call Monitor picture-in-picture | Teams calling |
+| `msteams:` / `web+msteams:` links | This build does not claim the schemes; a real Teams client keeps them |
+
+### Notifications
+
+Outlook on the web sends its desktop notifications through Web Push, which
+Electron cannot receive, so on its own it would never show one. This build
+forwards Outlook's in-app notifications to the desktop instead (see
+[PORTING.md](PORTING.md#desktop-notifications)). Keep **Settings → General →
+Notifications → Notifications in Outlook** on, and the app running. Nothing
+is sent while the Outlook window has focus, since the in-app notification is
+visible then.
 
 ## Run from source
 
@@ -62,11 +74,8 @@ npm run dist:linux:appimage
 
 ## Releases
 
-Releases are cut manually from the Actions tab: **Release** → *Run workflow*,
-entering the version. It lints, runs the unit tests, audits dependencies,
-builds all four x64 package formats and attaches them to a GitHub release
-(as a draft by default). See [PORTING.md](PORTING.md#cutting-a-release) for
-the full procedure.
+Releases are built locally for now; see
+[PORTING.md](PORTING.md#cutting-a-release) for the procedure.
 
 ## Configuration
 
