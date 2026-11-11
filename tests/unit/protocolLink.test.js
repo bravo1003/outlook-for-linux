@@ -175,7 +175,12 @@ test("stripWebPrefix passes non-string values through", () => {
   assert.strictEqual(stripWebPrefix(null), null);
 });
 
-test("the packaged protocol schemes match the schemes registered at runtime", () => {
+// [outlook] This fork's package declares no protocol schemes on purpose: an
+// Outlook build must not take msteams: links away from a real Teams client
+// (app/index.js registers them only for the Teams target).
+test("the packaged protocol schemes match the schemes registered at runtime", {
+  skip: !pkg.build.protocols && "the Outlook build packages no protocol schemes",
+}, () => {
   assert.deepStrictEqual(pkg.build.protocols.schemes, PROTOCOL_SCHEMES);
 });
 

@@ -223,7 +223,7 @@ function assertRestartPrompt(context, parent, options) {
   assert.deepStrictEqual(options, {
     type: "info",
     title: "Theme saved",
-    message: "Restart Teams for Linux to apply the selected theme.",
+    message: "Restart Outlook for Linux to apply the selected theme.",
     buttons: ["Restart now", "Later"],
     defaultId: 0,
     cancelId: 1,
