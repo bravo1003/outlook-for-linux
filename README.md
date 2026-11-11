@@ -53,9 +53,9 @@ Outlook on the web sends its desktop notifications through Web Push, which
 Electron cannot receive, so on its own it would never show one. This build
 forwards Outlook's in-app notifications to the desktop instead (see
 [PORTING.md](PORTING.md#desktop-notifications)). Keep **Settings → General →
-Notifications → Notifications in Outlook** on, and the app running. Nothing
-is sent while the Outlook window has focus, since the in-app notification is
-visible then.
+Notifications → Notifications in Outlook** on, and the app running; closed
+to the tray is fine. Nothing is sent while the Outlook window has focus, since
+the in-app notification is visible then.
 
 ## Run from source
 
