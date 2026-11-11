@@ -95,10 +95,15 @@ layout the parser expects.
 
 ```bash
 git remote add upstream https://github.com/IsmaelMartinez/teams-for-linux.git   # once
+git config remote.upstream.tagOpt --no-tags                                     # once, see below
 git fetch upstream
 git merge upstream/main
 git show upstream/main:README.md > README.upstream.md
 ```
+
+Do not fetch upstream's tags: upstream used `v1.x` version numbers years ago,
+so its tags collide with this fork's (`v1.1.0` was an upstream commit from
+2023). `tagOpt --no-tags` keeps `git fetch upstream` from bringing them in.
 
 Conflicts to expect, and what to do with them:
 
